@@ -11,6 +11,10 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { User } from './user/entities/user.entity';
+import { Seat } from './seat/entities/seat.entity';
+import { Reservation } from './reservation/entities/reservation.entity';
+import { Concert } from './concert/entities/concert.entity';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -23,7 +27,7 @@ const typeOrmModuleOptions = {
     host: configService.get('DB_HOST'),
     port: configService.get('DB_PORT'),
     database: configService.get('DB_NAME'),
-    entities: [],
+    entities: [User, Concert, Date, Seat, Reservation],
     synchronize: configService.get('DB_SYNC'),
     logging: true,
   }),

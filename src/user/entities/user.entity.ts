@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -9,30 +10,31 @@ import {
 import { Role } from '../types/userRole.type';
 import { Reservation } from 'src/reservation/entities/reservation.entity';
 
-export class User {}
-
-@Entity()
-export class Customer {
+@Index('email', ['email'], { unique: true })
+@Entity({
+  name: 'users',
+})
+export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  userId: number;
 
   @Column({ type: 'varchar', nullable: false })
   name: string;
 
-  @Column({ type: 'varchar', nullable: false })
+  @Column({ type: 'varchar', unique: true, nullable: false })
   email: string;
 
   @Column({ type: 'varchar', nullable: false, select: false })
   password: string;
 
-  @Column({ type: 'enum', enum: Role, nullable: false })
+  @Column({ type: 'enum', enum: Role, nullable: false, default: Role.User })
   role: Role;
 
   @Column({ type: 'int', nullable: false, default: 1000000 })
-  point: Date;
+  point: number;
 
   @OneToMany(() => Reservation, (reservation) => reservation, { cascade: true })
-  ticket: Reservation[];
+  reservation: Reservation[];
 
   @CreateDateColumn()
   createdAt: Date;
