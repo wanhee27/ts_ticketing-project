@@ -2,10 +2,6 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
-import { ReservationModule } from './reservation/reservation.module';
-import { ConcertModule } from './concert/concert.module';
-import { SeatModule } from './seat/seat.module';
-import { DateModule } from './date/date.module';
 import Joi from 'joi';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -15,6 +11,10 @@ import { User } from './user/entities/user.entity';
 import { Seat } from './seat/entities/seat.entity';
 import { Reservation } from './reservation/entities/reservation.entity';
 import { Concert } from './concert/entities/concert.entity';
+// import { Schedule } from './schedule/entities/schedule.entity';
+import { ConcertModule } from './concert/concert.module';
+// import { SeatModule } from './seat/seat.module';
+import { ReservationModule } from './reservation/reservation.module';
 
 const typeOrmModuleOptions = {
   useFactory: async (
@@ -27,7 +27,7 @@ const typeOrmModuleOptions = {
     host: configService.get('DB_HOST'),
     port: configService.get('DB_PORT'),
     database: configService.get('DB_NAME'),
-    entities: [User, Concert, Date, Seat, Reservation],
+    entities: [User, Concert, Seat, Reservation],
     synchronize: configService.get('DB_SYNC'),
     logging: true,
   }),
@@ -52,8 +52,7 @@ const typeOrmModuleOptions = {
     UserModule,
     AuthModule,
     ConcertModule,
-    SeatModule,
-    DateModule,
+    // SeatModule,
     ReservationModule,
   ],
   controllers: [AppController],

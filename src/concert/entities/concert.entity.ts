@@ -1,5 +1,5 @@
 import { Reservation } from '../../reservation/entities/reservation.entity';
-import { Date } from '../../date/entities/date.entity';
+// import { Schedule } from '../../schedule/entities/schedule.entity';
 import {
   Column,
   CreateDateColumn,
@@ -25,6 +25,12 @@ export class Concert {
   @Column({ type: 'varchar', nullable: false })
   location: string;
 
+  @Column()
+  date: Date;
+
+  @Column()
+  price: number;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -33,10 +39,4 @@ export class Concert {
 
   @OneToMany(() => Reservation, (reservation) => reservation.concert)
   reservation: Reservation[];
-
-  @OneToMany(() => Date, (date) => date.concert, {
-    cascade: true,
-    eager: true,
-  })
-  date: Date[];
 }

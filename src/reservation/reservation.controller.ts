@@ -1,34 +1,34 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Param, UseGuards, Body } from '@nestjs/common';
 import { ReservationService } from './reservation.service';
-import { CreateReservationDto } from './dto/create-reservation.dto';
-import { UpdateReservationDto } from './dto/update-reservation.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { UserInfo } from '../utils/userInfo.decorator';
+import { User } from '../user/entities/user.entity';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('reservation')
 export class ReservationController {
   constructor(private readonly reservationService: ReservationService) {}
 
-  @Post()
-  create(@Body() createReservationDto: CreateReservationDto) {
-    return this.reservationService.create(createReservationDto);
-  }
-
+  //예매 확인
   @Get()
-  findAll() {
-    return this.reservationService.findAll();
+  async myReservation(@UserInfo() user: User) {
+    return await this.reservationService.getReservation(user);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reservationService.findOne(+id);
+  //좌석을 지정하지 않고 예매
+  @Post(':concertId')
+  async newReservation(
+    @UserInfo() user: User,
+    @Param('concertId') concertId: number,
+    @Body('numOfSeats') numOfSeats: number,
+  ) {
+    return await this.reservationService.newReservation(
+      concertId,
+      user,
+      numOfSeats,
+    );
   }
+  //좌석을 지정하고 예매
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateReservationDto: UpdateReservationDto) {
-    return this.reservationService.update(+id, updateReservationDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reservationService.remove(+id);
-  }
+  //예매 취소
 }

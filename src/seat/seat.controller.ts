@@ -1,34 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param, Delete } from '@nestjs/common';
 import { SeatService } from './seat.service';
-import { CreateSeatDto } from './dto/create-seat.dto';
-import { UpdateSeatDto } from './dto/update-seat.dto';
 
 @Controller('seat')
 export class SeatController {
   constructor(private readonly seatService: SeatService) {}
 
-  @Post()
-  create(@Body() createSeatDto: CreateSeatDto) {
-    return this.seatService.create(createSeatDto);
-  }
-
+  //모든 좌석 조회
   @Get()
   findAll() {
     return this.seatService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.seatService.findOne(+id);
+  //좌석 선택
+  @Get(':seatId')
+  findOne(@Param('seatId') seatId: string) {
+    return this.seatService.findOne(+seatId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSeatDto: UpdateSeatDto) {
-    return this.seatService.update(+id, updateSeatDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.seatService.remove(+id);
+  //지정된 좌석
+  @Delete(':seatId')
+  remove(@Param('seatId') seatId: string) {
+    return this.seatService.remove(+seatId);
   }
 }
