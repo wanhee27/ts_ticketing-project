@@ -1,25 +1,26 @@
-import { Transform } from 'class-transformer';
-import { IsDate, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { PickType } from '@nestjs/swagger';
+import { Concert } from '../entities/concert.entity';
+import { CreateScheduleDto } from './schedule.dto';
+import { IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
-export class ConcertDto {
-  @IsString()
-  @IsNotEmpty({ message: '공연 제목을 입력해주세요.' })
-  title: string;
+export class CreateConcertDto extends PickType(Concert, [
+  'title',
+  'content',
+  'category',
+  'location',
+  'price',
+  'thumbnail',
+]) {
+  @ValidateNested()
+  @Type(() => CreateScheduleDto)
+  schedules: CreateScheduleDto[];
 
-  @IsString()
-  @IsNotEmpty({ message: '공연 내용을 입력해주세요.' })
-  content: string;
-
-  @IsString()
-  @IsNotEmpty({ message: '공연 위치를 입력해주세요.' })
-  location: string;
-
-  @IsDate()
-  @IsNotEmpty({ message: '공연 날짜를 입력해주세요.' })
-  @Transform(({ value }) => new Date(value))
-  date: Date;
-
+  /**
+   * 좌석 수
+   * @example 100
+   */
+  @IsNotEmpty({ message: '좌석 수를 입력해 주세요.' })
   @IsNumber()
-  @IsNotEmpty({ message: '가격을 입력해주세요.' })
-  price: number;
+  seats: number;
 }

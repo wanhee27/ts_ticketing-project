@@ -1,66 +1,84 @@
-import { compare, hash } from 'bcrypt';
-import _ from 'lodash';
 import { Repository } from 'typeorm';
 import {
-  ConflictException,
+  BadRequestException,
   Injectable,
-  UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRegisterDto } from '../user/dto/register.dto';
 import { User } from '../user/entities/user.entity';
-import { LoginDto } from '../user/dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
+import { DEFAULT_CUSTOMER_POINT } from '../utils/point.constant';
+import { ConfigService } from '@nestjs/config';
+import bcrypt from 'bcrypt';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
   ) {}
 
   //회원가입
-  async register(dto: UserRegisterDto) {
-    const existingUser = await this.findByEmail(dto.email);
+  async register({ email, password, passwordConfirm, name }: UserRegisterDto) {
+    const existingUser = await this.userRepository.findOneBy({ email });
     if (existingUser) {
-      throw new ConflictException(
+      throw new BadRequestException(
         '이미 해당 이메일로 가입된 사용자가 있습니다!',
       );
     }
-    const hashedPassword = await hash(dto.password, 10);
+    const isPasswordMatched = password === passwordConfirm;
+    if (!isPasswordMatched) {
+      throw new BadRequestException(
+        '비밀번호와 비밀번호 확인이 서로 일치하지 않습니다.',
+      );
+    }
+    const hashRound = this.configService.get<number>('PASSWORD_HASH_ROUNDS');
+    const hashedPassword = bcrypt.hashSync(password, hashRound);
 
-    await this.userRepository.save({
-      email: dto.email,
+    const user = await this.userRepository.save({
+      email,
       password: hashedPassword,
-      name: dto.name,
-      role: dto.role,
+      name,
+      point: DEFAULT_CUSTOMER_POINT,
     });
-    return { message: '가입 성공' };
+    return this.login(user.id);
   }
 
-  //로그인
-  async login(dto: LoginDto) {
+  // //로그인
+  login(userId: number) {
+    const payload = { id: userId };
+    const accessToken = this.jwtService.sign(payload);
+
+    return { accessToken };
+  }
+
+  async validateUser({ email, password }: LoginDto) {
     const user = await this.userRepository.findOne({
-      select: ['userId', 'email', 'password'],
-      where: { email: dto.email },
+      where: { email },
+      select: { id: true, password: true },
     });
-    if (_.isNil(user)) {
-      throw new UnauthorizedException('이메일을 확인해주세요.');
+    const isPasswordMatched = bcrypt.compareSync(
+      password,
+      user?.password ?? '',
+    );
+    if (!user || !isPasswordMatched) {
+      return null;
     }
-
-    if (!(await compare(dto.password, user.password))) {
-      throw new UnauthorizedException('비밀번호를 확인해주세요.');
-    }
-
-    const payload = { email: dto.email, sub: user.userId };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    return { id: user.id };
   }
 
   //프로필조회
-  async findByEmail(email: string) {
-    return await this.userRepository.findOneBy({ email });
+  async findOneById(id: number) {
+    const user = await this.userRepository.findOneBy({ id });
+
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    return user;
   }
 }

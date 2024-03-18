@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import Joi from 'joi';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
@@ -8,12 +7,7 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { User } from './user/entities/user.entity';
-import { Seat } from './seat/entities/seat.entity';
-import { Reservation } from './reservation/entities/reservation.entity';
-import { Concert } from './concert/entities/concert.entity';
-// import { Schedule } from './schedule/entities/schedule.entity';
 import { ConcertModule } from './concert/concert.module';
-// import { SeatModule } from './seat/seat.module';
 import { ReservationModule } from './reservation/reservation.module';
 
 const typeOrmModuleOptions = {
@@ -27,8 +21,9 @@ const typeOrmModuleOptions = {
     host: configService.get('DB_HOST'),
     port: configService.get('DB_PORT'),
     database: configService.get('DB_NAME'),
-    entities: [User, Concert, Seat, Reservation],
+    entities: [User],
     synchronize: configService.get('DB_SYNC'),
+    autoLoadEntities: true,
     logging: true,
   }),
   inject: [ConfigService],
@@ -43,19 +38,19 @@ const typeOrmModuleOptions = {
         DB_USERNAME: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
         DB_HOST: Joi.string().required(),
-        DB_PORT: Joi.string().required(),
+        DB_PORT: Joi.number().required(),
         DB_NAME: Joi.string().required(),
         DB_SYNC: Joi.string().required(),
+        SERVER_PORT: Joi.number().required(),
+        PASSWORD_HASH_ROUNDS: Joi.number().required().default(10),
       }),
     }),
     TypeOrmModule.forRootAsync(typeOrmModuleOptions),
     UserModule,
     AuthModule,
     ConcertModule,
-    // SeatModule,
     ReservationModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

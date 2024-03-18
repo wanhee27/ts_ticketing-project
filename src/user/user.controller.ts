@@ -1,31 +1,77 @@
-import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UseGuards,
+  HttpStatus,
+  HttpCode,
+  Request,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserRegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from './entities/user.entity';
-import { UserInfo } from '../utils/userInfo.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
-@Controller('user')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   //회원가입
+  /**
+   * 회원가입
+   * @param userRegisterDto
+   * @returns
+   */
   @Post('register')
   async register(@Body() userRegisterDto: UserRegisterDto) {
-    return await this.userService.register(userRegisterDto);
+    const data = await this.userService.register(userRegisterDto);
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: '회원가입 되었습니다.',
+      data,
+    };
   }
 
   //로그인
+  /**
+   * 로그인
+   * @param req
+   * @param loginDto
+   * @returns
+   */
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('local'))
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    return await this.userService.login(loginDto);
+  login(@Request() req, @Body() loginDto: LoginDto) {
+    const data = this.userService.login(req.user.id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: '로그인에 성공했습니다.',
+      data,
+    };
   }
 
   //프로필 조회
+  /**
+   * 내 정보 조회
+   * @param req
+   * @returns
+   */
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
-  @Get('profile')
-  async getUserInfo(@UserInfo() user: User) {
-    return user;
+  @Get('me')
+  async findMe(@Request() req) {
+    const userId = req.user.id;
+
+    const data = await this.userService.findOneById(userId);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: '내 정보 조회에 성공했습니다.',
+      data,
+    };
   }
 }

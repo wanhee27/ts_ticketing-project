@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ReservationService } from './reservation.service';
 import { ReservationController } from './reservation.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { Reservation } from './entities/reservation.entity';
-import { Seat } from '../seat/entities/seat.entity';
-import { User } from '../user/entities/user.entity';
-import { Concert } from '../concert/entities/concert.entity';
+import { User } from 'src/user/entities/user.entity';
+import { Schedule } from 'src/concert/entities/schedule.entity';
+import { Seat } from 'src/concert/entities/seat.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Reservation, Seat, User, Concert])],
+  imports: [TypeOrmModule.forFeature([Reservation, User, Schedule, Seat])],
   controllers: [ReservationController],
   providers: [ReservationService],
 })

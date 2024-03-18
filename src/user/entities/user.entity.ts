@@ -7,7 +7,14 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Role } from '../types/userRole.type';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsStrongPassword,
+} from 'class-validator';
 import { Reservation } from 'src/reservation/entities/reservation.entity';
 
 @Index('email', ['email'], { unique: true })
@@ -15,30 +22,56 @@ import { Reservation } from 'src/reservation/entities/reservation.entity';
   name: 'users',
 })
 export class User {
-  @PrimaryGeneratedColumn()
-  userId: number;
+  @PrimaryGeneratedColumn({ unsigned: true }) //autoincrement 해주는속성
+  id: number;
 
-  @Column({ type: 'varchar', nullable: false })
+  /**
+   * 이름
+   * @example "고객"
+   */
+  @IsNotEmpty({ message: '이름을 입력해 주세요.' })
+  @IsString()
+  @Column()
   name: string;
 
-  @Column({ type: 'varchar', unique: true, nullable: false })
+  /**
+   * 이메일
+   * @example "example@example.com"
+   */
+  @IsNotEmpty({ message: '이메일을 입력해 주세요.' })
+  @IsEmail({}, { message: '이메일 형식에 맞지 않습니다.' })
+  @Column({ unique: true })
   email: string;
 
-  @Column({ type: 'varchar', nullable: false, select: false })
+  /**
+   * 비밀번호
+   * @example "Ex@mp1e!!"
+   */
+  @IsNotEmpty({ message: '비밀번호을 입력해 주세요.' })
+  @IsStrongPassword(
+    {},
+    {
+      message:
+        '비밀번호는 영문 알파벳 대,소문자, 숫자, 특수문자(!@#$%^&*)를 포함해서 8자리 이상으로 입력해야 합니다.',
+    },
+  )
+  @Column({ select: false })
   password: string;
 
-  @Column({ type: 'enum', enum: Role, nullable: false, default: Role.User })
-  role: Role;
+  @IsBoolean()
+  @Column({ default: false })
+  isAdmin: boolean;
 
-  @Column({ type: 'int', nullable: false, default: 1000000 })
+  @IsNumber()
+  @Column({ unsigned: true })
   point: number;
-
-  @OneToMany(() => Reservation, (reservation) => reservation, { cascade: true })
-  reservation: Reservation[];
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => Reservation, (reservation) => reservation.user)
+  reservation: Reservation[];
 }
